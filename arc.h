@@ -7,19 +7,20 @@ class Arc
 {
 public:
     Arc();
-    Arc(Point a, Point b, Point center);
+    Arc(Point a, Point b, Point c);
 
     Point& a();
     Point& b();
-    Point& center();
+    Point& c();
+    Point center();
 
     double radius();
 
 private:
-    // По часовой стрелке от a к b вокруг center
+    // a -> b -> c
     Point m_a;
     Point m_b;
-    Point m_center;
+    Point m_c;
 };
 
 #endif // ARC_H

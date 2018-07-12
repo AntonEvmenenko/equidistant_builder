@@ -31,7 +31,8 @@ SOURCES += \
     arc.cpp \
     pathpart.cpp \
     segment.cpp \
-    solver.cpp
+    solver.cpp \
+    line.cpp
 
 HEADERS += \
         mainwindow.h \
@@ -40,7 +41,8 @@ HEADERS += \
     arc.h \
     pathpart.h \
     segment.h \
-    solver.h
+    solver.h \
+    line.h
 
 FORMS += \
         mainwindow.ui
