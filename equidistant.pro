@@ -24,25 +24,25 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
-    point.cpp \
-    vector.cpp \
-    arc.cpp \
-    pathpart.cpp \
-    segment.cpp \
-    solver.cpp \
-    line.cpp
+    src/main.cpp \
+    src/mainwindow.cpp \
+    src/point.cpp \
+    src/vector.cpp \
+    src/arc.cpp \
+    src/pathpart.cpp \
+    src/segment.cpp \
+    src/solver.cpp \
+    src/line.cpp
 
 HEADERS += \
-        mainwindow.h \
-    point.h \
-    vector.h \
-    arc.h \
-    pathpart.h \
-    segment.h \
-    solver.h \
-    line.h
+    src/mainwindow.h \
+    src/point.h \
+    src/vector.h \
+    src/arc.h \
+    src/pathpart.h \
+    src/segment.h \
+    src/solver.h \
+    src/line.h
 
 FORMS += \
-        mainwindow.ui
+    src/mainwindow.ui
