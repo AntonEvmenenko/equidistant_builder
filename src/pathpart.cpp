@@ -15,6 +15,11 @@ PathPart::PathPart(Arc arc): m_arc(arc), m_type(PathPartType::Arc)
 
 }
 
+PathPart::PathPart(Circle circle): m_circle(circle), m_type(PathPartType::Circle)
+{
+
+}
+
 PathPartType PathPart::type()
 {
     return m_type;
@@ -28,4 +33,9 @@ Segment& PathPart::segment()
 Arc& PathPart::arc()
 {
     return m_arc;
+}
+
+Circle& PathPart::circle()
+{
+    return m_circle;
 }

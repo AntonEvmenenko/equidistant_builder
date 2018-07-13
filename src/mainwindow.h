@@ -28,6 +28,12 @@ private slots:
 
     void on_addArcButton_clicked();
 
+    void on_createButton_clicked();
+
+    void on_clearButton_clicked();
+
+    void on_offsetLineEdit_textChanged(const QString &text);
+
 private:
     Ui::MainWindow *ui;
     void drawPoint(Point point, int width, QColor color, QPainter *painter);

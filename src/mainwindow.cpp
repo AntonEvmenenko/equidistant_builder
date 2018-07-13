@@ -5,11 +5,17 @@
 #include <QPainter>
 #include <QMouseEvent>
 
-#define SEGMENT_WIDTH 2
-#define SEGMENT_COLOR Qt::blue
+#define ORIGINAL_SEGMENT_WIDTH 2
+#define ORIGINAL_SEGMENT_COLOR Qt::blue
 
-#define ARC_WIDTH 2
-#define ARC_COLOR Qt::blue
+#define ORIGINAL_ARC_WIDTH 2
+#define ORIGINAL_ARC_COLOR Qt::blue
+
+#define OFFSET_SEGMENT_WIDTH 2
+#define OFFSET_SEGMENT_COLOR Qt::gray
+
+#define OFFSET_ARC_WIDTH 2
+#define OFFSET_ARC_COLOR Qt::gray
 
 #define POINT_WIDTH 5
 #define POINT_COLOR Qt::red
@@ -34,14 +40,25 @@ void MainWindow::paintEvent(QPaintEvent *event)
     Q_UNUSED(event);
     QPainter painter(this);
 
-    QVector<PathPart>& path = m_solver.getPath();
+    QVector<PathPart>& path = m_solver.getOriginalPath();
 
     for (auto i = path.begin(); i < path.end(); ++i) {
         if (i->type() == PathPartType::Arc) {
             i->arc().updateCenter();
-            drawArc(i->arc(), ARC_WIDTH, ARC_COLOR, &painter);
+            drawArc(i->arc(), ORIGINAL_ARC_WIDTH, ORIGINAL_ARC_COLOR, &painter);
         } else if (i->type() == PathPartType::Segment) {
-            drawSegment(i->segment(), SEGMENT_WIDTH, SEGMENT_COLOR, &painter);
+            drawSegment(i->segment(), ORIGINAL_SEGMENT_WIDTH, ORIGINAL_SEGMENT_COLOR, &painter);
+        }
+    }
+
+    QVector<PathPart> offsetPath = m_solver.getOffsetPath();
+
+    for (auto i = offsetPath.begin(); i < offsetPath.end(); ++i) {
+        if (i->type() == PathPartType::Arc) {
+            i->arc().updateCenter();
+            drawArc(i->arc(), OFFSET_ARC_WIDTH, OFFSET_ARC_COLOR, &painter);
+        } else if (i->type() == PathPartType::Segment) {
+            drawSegment(i->segment(), OFFSET_SEGMENT_WIDTH, OFFSET_SEGMENT_COLOR, &painter);
         }
     }
 }
@@ -52,7 +69,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 
     const double eps = 5;
 
-    QVector<PathPart>& path = m_solver.getPath();
+    QVector<PathPart>& path = m_solver.getOriginalPath();
 
     if (event->buttons() & Qt::LeftButton) {
         for (auto i = path.begin(); i < path.end(); ++i) {
@@ -166,11 +183,11 @@ void MainWindow::drawSegment(Segment segment, int width, QColor color, QPainter 
 
 Point MainWindow::getLastPathPoint()
 {
-    if (m_solver.getPath().isEmpty()) {
+    if (m_solver.getOriginalPath().isEmpty()) {
         return Point(200, 200);
     }
 
-    PathPart lastPathPart = m_solver.getPath().last();
+    PathPart lastPathPart = m_solver.getOriginalPath().last();
 
     Point p;
     if (lastPathPart.type() == PathPartType::Segment) {
@@ -203,4 +220,27 @@ void MainWindow::on_addArcButton_clicked()
     m_solver.addPathPart(Arc(lastPoint, lastPoint + Vector(70, 0), lastPoint + Vector(70, 70)));
 
     repaint();
+}
+
+void MainWindow::on_createButton_clicked()
+{
+    m_solver.solve();
+    repaint();
+}
+
+void MainWindow::on_clearButton_clicked()
+{
+    m_solver.clear();
+    repaint();
+}
+
+void MainWindow::on_offsetLineEdit_textChanged(const QString &text)
+{
+    bool ok;
+    int offset = text.toInt(&ok);
+    if (ok) {
+        m_solver.setOffset(offset);
+    } else {
+        qWarning() << "Failed to parse offset";
+    }
 }
