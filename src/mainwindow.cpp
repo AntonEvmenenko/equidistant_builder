@@ -5,16 +5,16 @@
 #include <QPainter>
 #include <QMouseEvent>
 
-#define SEGMENT_WIDTH 3
-#define SEGMENT_COLOR Qt::black
+#define SEGMENT_WIDTH 2
+#define SEGMENT_COLOR Qt::blue
 
-#define ARC_WIDTH 3
-#define ARC_COLOR Qt::black
+#define ARC_WIDTH 2
+#define ARC_COLOR Qt::blue
 
-#define POINT_WIDTH 6
+#define POINT_WIDTH 5
 #define POINT_COLOR Qt::red
 
-#define ARC_CENTER_WIDTH 6
+#define ARC_CENTER_WIDTH 5
 #define ARC_CENTER_COLOR Qt::green
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -38,6 +38,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
     for (auto i = path.begin(); i < path.end(); ++i) {
         if (i->type() == PathPartType::Arc) {
+            i->arc().updateCenter();
             drawArc(i->arc(), ARC_WIDTH, ARC_COLOR, &painter);
         } else if (i->type() == PathPartType::Segment) {
             drawSegment(i->segment(), SEGMENT_WIDTH, SEGMENT_COLOR, &painter);
@@ -47,29 +48,41 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
-    Point p = Point(event->x(), event->y());
-
-    QVector<PathPart>& path = m_solver.getPath();
+    Point p = translatePoint(Point(event->x(), event->y()));
 
     const double eps = 5;
 
-    for (auto i = path.begin(); i < path.end(); ++i) {
-        if (i->type() == PathPartType::Segment) {
-            if (Vector(p, i->segment().a()).length() < eps) {
-                m_dragPoints.append(&(i->segment().a()));
-            } else if (Vector(p, i->segment().b()).length() < eps) {
-                m_dragPoints.append(&(i->segment().b()));
+    QVector<PathPart>& path = m_solver.getPath();
+
+    if (event->buttons() & Qt::LeftButton) {
+        for (auto i = path.begin(); i < path.end(); ++i) {
+            if (i->type() == PathPartType::Segment) {
+                if (Vector(p, i->segment().a()).length() < eps) {
+                    m_dragPoints.append(&(i->segment().a()));
+                } else if (Vector(p, i->segment().b()).length() < eps) {
+                    m_dragPoints.append(&(i->segment().b()));
+                }
+            } else {
+                if (Vector(p, i->arc().a()).length() < eps) {
+                    m_dragPoints.append(&(i->arc().a()));
+                } else if (Vector(p, i->arc().b()).length() < eps) {
+                    m_dragPoints.append(&(i->arc().b()));
+                } else if (Vector(p, i->arc().center()).length() < eps) {
+                    m_dragPoints.append(&(i->arc().center()));
+                }
             }
-        } else {
-            if (Vector(p, i->arc().a()).length() < eps) {
-                m_dragPoints.append(&(i->arc().a()));
-            } else if (Vector(p, i->arc().b()).length() < eps) {
-                m_dragPoints.append(&(i->arc().b()));
-            } else if (Vector(p, i->arc().c()).length() < eps) {
-                m_dragPoints.append(&(i->arc().c()));
+        }
+    } else if (event->buttons() & Qt::RightButton) {
+        for (auto i = path.begin(); i < path.end(); ++i) {
+            if (i->type() == PathPartType::Arc) {
+                if (Vector(p, i->arc().center()).length() < eps) {
+                    i->arc().changeDirection();
+                }
             }
         }
     }
+
+    repaint();
 }
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
@@ -80,10 +93,12 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
+    Point p = translatePoint(Point(event->x(), event->y()));
+
     if (!m_dragPoints.isEmpty()) {
         for (auto i = m_dragPoints.begin(); i != m_dragPoints.end(); ++i) {
-            (*i)->setX(event->x());
-            (*i)->setY(event->y());
+            (*i)->setX(p.x());
+            (*i)->setY(p.y());
         }
     }
     repaint();
@@ -96,7 +111,9 @@ void MainWindow::drawPoint(Point point, int width, QColor color, QPainter *paint
     pen.setColor(color);
     painter->setPen(pen);
 
-    painter->drawPoint(QPointF(point.x(), point.y()));
+    Point p = translatePoint(point);
+
+    painter->drawPoint(QPointF(p.x(), p.y()));
 }
 
 void MainWindow::drawArc(Arc arc, int width, QColor color, QPainter* painter)
@@ -107,21 +124,27 @@ void MainWindow::drawArc(Arc arc, int width, QColor color, QPainter* painter)
     painter->setPen(pen);
 
     double radius = arc.radius();
-    QRectF rectangle(arc.center().x() - radius, arc.center().y() - radius, 2 * radius, 2 * radius);
 
-    double startAngle = atan2(arc.c().y() - arc.center().y(), arc.c().x() - arc.center().x()) * 180. / M_PI;
-    double endAngle = atan2(arc.a().y() - arc.center().y(), arc.a().x() - arc.center().x()) * 180. / M_PI;
+    Point p(arc.center().x() - radius, arc.center().y() - radius);
+    p = translatePoint(p);
 
-    qDebug() << startAngle << endAngle;
+    QRectF rectangle(p.x(), p.y() - 2 * radius, 2 * radius, 2 * radius);
 
-    startAngle *= -16.;
-    endAngle *= -16.;
+    double startAngle = atan2(arc.a().y() - arc.center().y(), arc.a().x() - arc.center().x()) * 180. / M_PI;
+    double endAngle = atan2(arc.b().y() - arc.center().y(), arc.b().x() - arc.center().x()) * 180. / M_PI;
+    double spanAngle = endAngle - startAngle;
 
-    painter->drawArc(rectangle, startAngle, endAngle - startAngle);
+    if (arc.arcDirection() == ArcDirection::CW && spanAngle > 0) spanAngle -= 360.;
+    if (arc.arcDirection() == ArcDirection::CCW && spanAngle < 0) spanAngle += 360.;
 
-    drawPoint(arc.a(), POINT_WIDTH, /*POINT_COLOR*/Qt::red, painter);
-    drawPoint(arc.b(), POINT_WIDTH, /*POINT_COLOR*/Qt::green, painter);
-    drawPoint(arc.c(), POINT_WIDTH, /*POINT_COLOR*/Qt::blue, painter);
+    startAngle *= 16.;
+    endAngle *= 16.;
+    spanAngle *= 16.;
+
+    painter->drawArc(rectangle, startAngle, spanAngle);
+
+    drawPoint(arc.a(), POINT_WIDTH, POINT_COLOR, painter);
+    drawPoint(arc.b(), POINT_WIDTH, POINT_COLOR, painter);
     drawPoint(arc.center(), ARC_CENTER_WIDTH, ARC_CENTER_COLOR, painter);
 }
 
@@ -132,7 +155,10 @@ void MainWindow::drawSegment(Segment segment, int width, QColor color, QPainter 
     pen.setColor(color);
     painter->setPen(pen);
 
-    painter->drawLine(segment.a().x(), segment.a().y(), segment.b().x(), segment.b().y());
+    Point a = translatePoint(segment.a());
+    Point b = translatePoint(segment.b());
+
+    painter->drawLine(a.x(), a.y(), b.x(), b.y());
 
     drawPoint(segment.a(), POINT_WIDTH, POINT_COLOR, painter);
     drawPoint(segment.b(), POINT_WIDTH, POINT_COLOR, painter);
@@ -150,10 +176,15 @@ Point MainWindow::getLastPathPoint()
     if (lastPathPart.type() == PathPartType::Segment) {
         p = lastPathPart.segment().b();
     } else {
-        p = lastPathPart.arc().c();
+        p = lastPathPart.arc().b();
     }
 
     return p;
+}
+
+Point MainWindow::translatePoint(Point p)
+{
+    return Point(p.x(), this->height() - p.y());
 }
 
 void MainWindow::on_addSegmentButton_clicked()

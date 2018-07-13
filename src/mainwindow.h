@@ -35,6 +35,7 @@ private:
     void drawSegment(Segment segment, int width, QColor color, QPainter *painter);
 
     Point getLastPathPoint();
+    Point translatePoint(Point p);
 
     Solver m_solver;
     Point* temp;

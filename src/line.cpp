@@ -17,6 +17,12 @@ Point intersection(Line l1, Line l2)
     }
 }
 
+Point projectPointOnLine(Point p, Line l)
+{
+    Line temp(p, Vector(l.a(), l.b()));
+    return intersection(l, temp);
+}
+
 Line::Line()
 {
 

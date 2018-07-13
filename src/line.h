@@ -7,6 +7,7 @@
 class Line;
 
 Point intersection(Line l1, Line l2);
+Point projectPointOnLine(Point p, Line l);
 
 class Line
 {
