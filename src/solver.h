@@ -2,7 +2,7 @@
 #define SOLVER_H
 
 #include <QVector>
-#include <pathpart.h>
+#include "pathpart.h"
 #include "vector.h"
 
 class Solver
