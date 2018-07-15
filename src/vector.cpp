@@ -11,6 +11,16 @@ Vector operator*(double k, const Vector &vector)
     return vector * k;
 }
 
+double operator*(const Vector &v1, const Vector &v2)
+{
+    return v1.x() * v2.x() + v1.y() * v2.y();
+}
+
+double operator^(const Vector &v1, const Vector &v2)
+{
+    return v1.x() * v2.y() - v2.x() * v1.y();
+}
+
 Vector::Vector()
 {
 

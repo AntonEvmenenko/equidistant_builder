@@ -33,7 +33,8 @@ SOURCES += \
     src/segment.cpp \
     src/solver.cpp \
     src/line.cpp \
-    src/circle.cpp
+    src/circle.cpp \
+    src/geometry.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -44,7 +45,8 @@ HEADERS += \
     src/segment.h \
     src/solver.h \
     src/line.h \
-    src/circle.h
+    src/circle.h \
+    src/geometry.h
 
 FORMS += \
     src/mainwindow.ui

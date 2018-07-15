@@ -26,6 +26,8 @@ public:
     void updateCenter();
     void changeDirection();
 
+    bool contains(Point p);
+
 private:
     Point m_a;
     Point m_b;

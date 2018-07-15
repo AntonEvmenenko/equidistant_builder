@@ -9,6 +9,11 @@ public:
     Circle();
     Circle(Point center, double radius);
 
+    Point center();
+    double radius();
+
+    bool contains(Point p);
+
 private:
     Point m_center;
     double m_radius;

@@ -28,6 +28,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    ui->offsetLineEdit->setText(QString::number(m_solver.getOffset()));
 }
 
 MainWindow::~MainWindow()
@@ -51,7 +53,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
         }
     }
 
-    QVector<PathPart> offsetPath = m_solver.getOffsetPath();
+    QVector<PathPart> offsetPath = m_solver.getSecondOffsetPath();
 
     for (auto i = offsetPath.begin(); i < offsetPath.end(); ++i) {
         if (i->type() == PathPartType::Arc) {
@@ -59,8 +61,30 @@ void MainWindow::paintEvent(QPaintEvent *event)
             drawArc(i->arc(), OFFSET_ARC_WIDTH, OFFSET_ARC_COLOR, &painter);
         } else if (i->type() == PathPartType::Segment) {
             drawSegment(i->segment(), OFFSET_SEGMENT_WIDTH, OFFSET_SEGMENT_COLOR, &painter);
+        } else if (i->type() == PathPartType::Circle) {
+            drawCircle(i->circle(), OFFSET_SEGMENT_WIDTH, OFFSET_SEGMENT_COLOR, &painter);
         }
     }
+
+//    if (path.length() == 3) {
+
+//        Segment s1 = path[0].segment();
+//        Segment s2 = path[2].segment();
+
+//        QVector<Point> points = intersectionSegmentSegment(s1, s2);
+//        qDebug() << points.length();
+//        for (auto i = points.begin(); i != points.end(); ++i) {
+//            drawPoint(*i, 5, Qt::yellow, &painter);r
+//        }
+//    }
+
+//    if (path.length() == 1) {
+//        Arc a = path.first().arc();
+
+//        qDebug() << a.contains(m_tempPoint);
+//    }
+
+//    drawPoint(m_tempPoint, 6, Qt::cyan, &painter);
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
@@ -160,8 +184,8 @@ void MainWindow::drawArc(Arc arc, int width, QColor color, QPainter* painter)
 
     painter->drawArc(rectangle, startAngle, spanAngle);
 
-    drawPoint(arc.a(), POINT_WIDTH, POINT_COLOR, painter);
-    drawPoint(arc.b(), POINT_WIDTH, POINT_COLOR, painter);
+    drawPoint(arc.a(), POINT_WIDTH, /*POINT_COLOR*/Qt::red, painter);
+    drawPoint(arc.b(), POINT_WIDTH, /*POINT_COLOR*/Qt::green, painter);
     drawPoint(arc.center(), ARC_CENTER_WIDTH, ARC_CENTER_COLOR, painter);
 }
 
@@ -179,6 +203,24 @@ void MainWindow::drawSegment(Segment segment, int width, QColor color, QPainter 
 
     drawPoint(segment.a(), POINT_WIDTH, POINT_COLOR, painter);
     drawPoint(segment.b(), POINT_WIDTH, POINT_COLOR, painter);
+}
+
+void MainWindow::drawCircle(Circle circle, int width, QColor color, QPainter *painter)
+{
+    QPen pen;
+    pen.setWidth(width);
+    pen.setColor(color);
+    painter->setPen(pen);
+
+    double radius = circle.radius();
+
+    Point p(circle.center().x() - radius, circle.center().y() - radius);
+    p = translatePoint(p);
+
+    QRectF rectangle(p.x(), p.y() - 2 * radius, 2 * radius, 2 * radius);
+
+    painter->drawEllipse(rectangle);
+
 }
 
 Point MainWindow::getLastPathPoint()
@@ -243,4 +285,22 @@ void MainWindow::on_offsetLineEdit_textChanged(const QString &text)
     } else {
         qWarning() << "Failed to parse offset";
     }
+}
+
+void MainWindow::on_offsetLineEdit_returnPressed()
+{
+    ui->offsetLineEdit->clearFocus();
+}
+
+void MainWindow::on_testButton_clicked()
+{
+//    QVector<PathPart> path = m_solver.getOriginalPath();
+
+//    if (path.length() == 1) {
+//        m_angle += 0.1;
+//        Arc a = path[0].arc();
+//        m_tempPoint = Point(a.center().x() + a.radius() * cos(m_angle), a.center().y() + a.radius() * sin(m_angle));
+//    }
+
+//    repaint();
 }

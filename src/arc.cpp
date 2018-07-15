@@ -1,7 +1,11 @@
 #include "arc.h"
 
+#include <QDebug>
+
 #include "vector.h"
 #include "line.h"
+#include "circle.h"
+#include "geometry.h"
 
 Arc::Arc()
 {
@@ -57,4 +61,32 @@ void Arc::changeDirection()
     } else {
         m_arcDirection = ArcDirection::CW;
     }
+}
+
+bool Arc::contains(Point p)
+{
+    if (equal(m_a, p) || equal(m_b, p)) {
+        return true;
+    }
+
+    if (!Circle(m_center, radius()).contains(p)) {
+        return false;
+    }
+
+    Vector oa(m_center, m_a);
+    Vector ob(m_center, m_b);
+    Vector op(m_center, p);
+
+    double a = oa ^ op;
+    double b = op ^ ob;
+    double c = oa ^ ob;
+
+    bool result = (c >= 0 && !((a >= 0) & (b >= 0))) ||
+                  (c <= 0 && ((a <= 0) & (b <= 0)));
+
+    if (m_arcDirection == ArcDirection::CCW) {
+        result = !result;
+    }
+
+    return result;
 }

@@ -12,6 +12,8 @@ public:
     Point& a();
     Point& b();
 
+    bool contains(Point p);
+
 private:
     Point m_a;
     Point m_b;

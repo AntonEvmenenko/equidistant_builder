@@ -34,18 +34,25 @@ private slots:
 
     void on_offsetLineEdit_textChanged(const QString &text);
 
+    void on_offsetLineEdit_returnPressed();
+
+    void on_testButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     void drawPoint(Point point, int width, QColor color, QPainter *painter);
     void drawArc(Arc arc, int width, QColor color, QPainter *painter);
     void drawSegment(Segment segment, int width, QColor color, QPainter *painter);
+    void drawCircle(Circle circle, int width, QColor color, QPainter *painter);
 
     Point getLastPathPoint();
     Point translatePoint(Point p);
 
     Solver m_solver;
-    Point* temp;
     QVector<Point*> m_dragPoints;
+
+    Point m_tempPoint;
+    double m_angle = 0.0;
 };
 
 #endif // MAINWINDOW_H
