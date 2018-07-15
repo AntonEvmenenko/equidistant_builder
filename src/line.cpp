@@ -3,17 +3,6 @@
 #include <QDebug>
 #include "geometry.h"
 
-Point projectPointOnLine(Point p, Line l)
-{
-    Line temp(p, Vector(l.a(), l.b()));
-
-    QVector<Point> result = intersectionLineLine(l, temp);
-
-    Q_ASSERT(result.size() == 1);
-
-    return result.first();
-}
-
 Line::Line()
 {
 

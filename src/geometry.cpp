@@ -10,15 +10,41 @@ bool equal(Point a, Point b)
     return equal(a.x(), b.x()) && equal(a.y(), b.y());
 }
 
+bool equal(Line l1, Line l2)
+{
+    double d = l1.a() * l2.b() - l2.a() * l1.b();
+    double d1 = l2.c() * l1.b() - l1.c() * l2.b();
+    double d2 = l2.a() * l1.c() - l1.a() * l2.c();
+
+    return isZero(d) && isZero(d1) && isZero(d2);
+}
+
 bool isZero(double a)
 {
     return equal(a, 0.0);
+}
+
+void removeEqualPoints(QVector<Point> &points)
+{
+    int
 }
 
 double distanceFromPointToLine(Point p, Line l)
 {
     Point projection = projectPointOnLine(p, l);
     return Vector(p, projection).length();
+}
+
+
+Point projectPointOnLine(Point p, Line l)
+{
+    Line temp(p, Vector(l.a(), l.b()));
+
+    QVector<Point> result = intersectionLineLine(l, temp);
+
+    Q_ASSERT(result.size() == 1);
+
+    return result.first();
 }
 
 QVector<Point> intersectionLineLine(Line l1, Line l2)
@@ -31,9 +57,8 @@ QVector<Point> intersectionLineLine(Line l1, Line l2)
 
     if (isZero(d) && isZero(d1) && isZero(d2)) {
         // conincidence
-        // Q_ASSERT(false);
         // TODO
-        return result;
+         Q_ASSERT(false);
     } else if (isZero(d) && (!isZero(d1) || !isZero(d2))) {
         // parallelism
         return result;
@@ -100,7 +125,15 @@ QVector<Point> intersectionCircleCircle(Circle c1, Circle c2)
 QVector<Point> intersectionSegmentSegment(Segment s1, Segment s2)
 {
     QVector<Point> result;
-    QVector<Point> linesIntersection = intersectionLineLine(Line(s1), Line(s2));
+
+    Line l1(s1), l2(s2);
+
+    if (equal(l1, l2)) {
+        // TODO
+        return result;
+    }
+
+    QVector<Point> linesIntersection = intersectionLineLine(l1, l2);
 
     if (!linesIntersection.isEmpty()) {
         Point p = linesIntersection.first();
@@ -166,4 +199,38 @@ QVector<Point> intersectionArcCircle(Arc a, Circle c)
     }
 
     return result;
+}
+
+bool segmentInsideRectangle(Segment s, Rectangle r)
+{
+    QVector<Segment> rectangleEdges = r.edges();
+
+    for (auto i = rectangleEdges.begin(); i != rectangleEdges.end(); ++i) {
+        if (equal(Line(s), Line(*i))) {
+            return false;
+        }
+    }
+
+    if (r.inside(s.a()) || r.inside(s.b()) || r.inside(s.center())) {
+        return true;
+    }
+
+    QVector<Point> intersectionPoints;
+    for (auto i = rectangleEdges.begin(); i != rectangleEdges.end(); ++i) {
+        intersectionPoints.append(intersectionSegmentSegment(s, *i));
+    }
+
+    std::sort(intersectionPoints.begin(), intersectionPoints.end(), [](const Point &p1, const Point &p2){
+        return Vector(p1.x(), p1.y()).length() > Vector(p2.x(), p2.y()).length();
+    });
+
+    auto last = std::unique(intersectionPoints.begin(), intersectionPoints.end(), [](const Point &p1, const Point &p2){
+        return equal(p1, p2);
+    });
+
+    intersectionPoints.erase(last, intersectionPoints.end());
+
+    Q_ASSERT(intersectionPoints.size() < 3);
+
+    return intersectionPoints.size() == 2;
 }

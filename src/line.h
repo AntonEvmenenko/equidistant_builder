@@ -7,8 +7,6 @@
 
 class Line;
 
-Point projectPointOnLine(Point p, Line l);
-
 class Line
 {
 public:

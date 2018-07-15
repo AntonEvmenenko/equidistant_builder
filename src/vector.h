@@ -24,6 +24,7 @@ public:
 
     Vector normalize();
     Vector rotate90CW();
+    Vector rotate90CCW();
 
 private:
     double m_x;

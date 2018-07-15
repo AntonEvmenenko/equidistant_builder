@@ -13,6 +13,7 @@ public:
     Point& b();
 
     bool contains(Point p);
+    Point center();
 
 private:
     Point m_a;

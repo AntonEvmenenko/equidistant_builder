@@ -59,3 +59,8 @@ Vector Vector::rotate90CW()
 {
     return Vector(m_y, -m_x);
 }
+
+Vector Vector::rotate90CCW()
+{
+    return Vector(-m_y, m_x);
+}

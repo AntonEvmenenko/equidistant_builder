@@ -5,6 +5,7 @@
 #include "pathpart.h"
 #include "vector.h"
 #include "geometry.h"
+#include "rectangle.h"
 
 class Solver
 {
@@ -27,15 +28,17 @@ public:
     void clear();
 
 private:
-    QVector<PathPart> m_originalPath;
-    QVector<PathPart> m_firstOffsetPath;
-    QVector<PathPart> m_secondOffsetPath;
-
     QVector<Point> getIntersectionPoints(PathPart a, PathPart b);
     void insertPointIfDoesntExist(Point p, QVector<Point> &points);
 
     QVector<PathPart> split(PathPart pathPart, QVector<Point> points);
     QVector<PathPart> splitSegment(Segment s, QVector<Point> points);
+
+    QVector<PathPart> m_originalPath;
+    QVector<PathPart> m_firstOffsetPath;
+    QVector<PathPart> m_secondOffsetPath;
+
+    QVector<Rectangle> m_cutoffRectangles;
 
     int m_offset = 30;
 };

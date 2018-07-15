@@ -35,3 +35,9 @@ bool Segment::contains(Point p)
             equal(p, m_a) ||
             equal(p, m_b);
 }
+
+Point Segment::center()
+{
+    Vector ab_2 = Vector(m_a, m_b) * 0.5;
+    return Point(m_a + ab_2);
+}

@@ -61,7 +61,17 @@ QVector<PathPart> Solver::offsetPathPart(PathPart pathPart)
 void Solver::makeOffset()
 {
     for (auto i = m_originalPath.begin(); i != m_originalPath.end(); ++i) {
-        m_firstOffsetPath.append(offsetPathPart(*i));
+        QVector<PathPart> offset = offsetPathPart(*i);
+        m_firstOffsetPath.append(offset);
+
+        if (i->type() == PathPartType::Segment) {
+            Point a = i->segment().a();
+            Point b = i->segment().b();
+
+            Vector ab_2 = Vector(a, b) * 0.5;
+
+            m_cutoffRectangles.append(Rectangle(a + ab_2, ab_2, ab_2.rotate90CCW().normalize() * m_offset));
+        }
     }
 }
 
@@ -100,6 +110,8 @@ void Solver::solve()
     QVector<PathPart> in, out;
     in = m_firstOffsetPath;
 
+    // split
+
     for (int i = 0; i < in.size(); ++i) {
         QVector<Point> intersectionPoints;
         for (int j = 0; j < in.size(); ++j) {
@@ -119,11 +131,34 @@ void Solver::solve()
     }
 
     m_secondOffsetPath = out;
+
+    // cutoff
+    auto i = m_secondOffsetPath.begin();
+
+    while (i != m_secondOffsetPath.end()) {
+        bool needToCutoff = false;
+        if (i->type() == PathPartType::Segment) {
+            for (auto j = m_cutoffRectangles.begin(); j != m_cutoffRectangles.end(); ++j) {
+                if (j->inside(i->segment().center())) {
+                    needToCutoff = true;
+                    break;
+                }
+            }
+        }
+        if (needToCutoff) {
+            i = m_secondOffsetPath.erase(i);
+        } else {
+            ++i;
+        }
+    }
+
+    qDebug() << "end = " << m_secondOffsetPath.size();
 }
 
 void Solver::clear()
 {
     m_firstOffsetPath.clear();
+    m_secondOffsetPath.clear();
 }
 
 QVector<Point> Solver::getIntersectionPoints(PathPart a, PathPart b)
@@ -132,8 +167,21 @@ QVector<Point> Solver::getIntersectionPoints(PathPart a, PathPart b)
 
     if (a.type() == PathPartType::Segment && b.type() == PathPartType::Segment) {
         result = intersectionSegmentSegment(a.segment(), b.segment());
+    } else if (a.type() == PathPartType::Segment && b.type() == PathPartType::Arc) {
+        result = intersectionSegmentArc(a.segment(), b.arc());
+    } else if (a.type() == PathPartType::Arc && b.type() == PathPartType::Segment) {
+        result = intersectionSegmentArc(b.segment(), a.arc());
+    } else if (a.type() == PathPartType::Segment && b.type() == PathPartType::Circle) {
+        result = intersectionSegmentCircle(a.segment(), b.circle());
+    } else if (a.type() == PathPartType::Circle && b.type() == PathPartType::Segment) {
+        result = intersectionSegmentCircle(b.segment(), a.circle());
+    } else if (a.type() == PathPartType::Arc && b.type() == PathPartType::Arc) {
+        result = intersectionArcArc(a.arc(), b.arc());
+    } else if (a.type() == PathPartType::Arc && b.type() == PathPartType::Circle) {
+        result = intersectionArcCircle(a.arc(), b.circle());
+    } else if (a.type() == PathPartType::Circle && b.type() == PathPartType::Arc) {
+        result = intersectionArcCircle(b.arc(), a.circle());
     }
-
     return result;
 }
 
