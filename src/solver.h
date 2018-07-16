@@ -29,16 +29,18 @@ public:
 
 private:
     QVector<Point> getIntersectionPoints(PathPart a, PathPart b);
-    void insertPointIfDoesntExist(Point p, QVector<Point> &points);
 
     QVector<PathPart> split(PathPart pathPart, QVector<Point> points);
     QVector<PathPart> splitSegment(Segment s, QVector<Point> points);
+    QVector<PathPart> splitArc(Arc a, QVector<Point> points);
+    QVector<PathPart> splitCircle(Circle c, QVector<Point> points);
 
     QVector<PathPart> m_originalPath;
     QVector<PathPart> m_firstOffsetPath;
     QVector<PathPart> m_secondOffsetPath;
 
     QVector<Rectangle> m_cutoffRectangles;
+    QVector<Circle> m_cutoffCircles;
 
     int m_offset = 30;
 };

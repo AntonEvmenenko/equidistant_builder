@@ -26,7 +26,15 @@ bool isZero(double a)
 
 void removeEqualPoints(QVector<Point> &points)
 {
-    int
+    std::sort(points.begin(), points.end(), [](const Point &p1, const Point &p2){
+        return Vector(p1.x(), p1.y()).length() > Vector(p2.x(), p2.y()).length();
+    });
+
+    auto last = std::unique(points.begin(), points.end(), [](const Point &p1, const Point &p2){
+        return equal(p1, p2);
+    });
+
+    points.erase(last, points.end());
 }
 
 double distanceFromPointToLine(Point p, Line l)
@@ -220,17 +228,42 @@ bool segmentInsideRectangle(Segment s, Rectangle r)
         intersectionPoints.append(intersectionSegmentSegment(s, *i));
     }
 
-    std::sort(intersectionPoints.begin(), intersectionPoints.end(), [](const Point &p1, const Point &p2){
-        return Vector(p1.x(), p1.y()).length() > Vector(p2.x(), p2.y()).length();
-    });
-
-    auto last = std::unique(intersectionPoints.begin(), intersectionPoints.end(), [](const Point &p1, const Point &p2){
-        return equal(p1, p2);
-    });
-
-    intersectionPoints.erase(last, intersectionPoints.end());
+    removeEqualPoints(intersectionPoints);
 
     Q_ASSERT(intersectionPoints.size() < 3);
 
     return intersectionPoints.size() == 2;
+}
+
+bool arcInsideRectangle(Arc a, Rectangle r)
+{
+    // TODO: check
+
+    if (r.inside(a.a()) || r.inside(a.b())) {
+        return true;
+    }
+
+    QVector<Segment> rectangleEdges = r.edges();
+
+    QVector<Point> intersectionPoints;
+    for (auto i = rectangleEdges.begin(); i != rectangleEdges.end(); ++i) {
+        intersectionPoints.append(intersectionSegmentArc(*i, a));
+    }
+
+    removeEqualPoints(intersectionPoints);
+
+    Q_ASSERT(intersectionPoints.size() < 3);
+
+    return (intersectionPoints.size() == 2) && r.inside(a.middlePoint());
+}
+
+bool segmentInsideCircle(Segment s, Circle c)
+{
+    if (c.inside(s.a()) || c.inside(s.b())) {
+        return true;
+    }
+
+    // TODO: finish
+
+    return false;
 }

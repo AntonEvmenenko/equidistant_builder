@@ -69,7 +69,7 @@ bool Arc::contains(Point p)
         return true;
     }
 
-    if (!Circle(m_center, radius()).contains(p)) {
+    if (!Circle(m_center, radius()).onEdge(p)) {
         return false;
     }
 
@@ -89,4 +89,31 @@ bool Arc::contains(Point p)
     }
 
     return result;
+}
+
+
+Point Arc::middlePoint()
+{
+    double startAngle = atan2(m_a.y() - m_center.y(), m_a.x() - m_center.x());
+    double endAngle = atan2(m_b.y() - m_center.y(), m_b.x() - m_center.x());
+
+    if (m_arcDirection == ArcDirection::CCW) {
+        if (endAngle < startAngle) {
+            endAngle += 2 * M_PI;
+        }
+
+        double spanAngle = endAngle - startAngle;
+        double angle = startAngle + spanAngle * 0.5;
+
+        return m_center + Vector(cos(angle) * radius(), sin(angle) * radius());
+    } else {
+        if (endAngle > startAngle) {
+            endAngle -= 2 * M_PI;
+        }
+
+        double spanAngle = startAngle - endAngle;
+        double angle = startAngle - spanAngle * 0.5;
+
+        return m_center + Vector(cos(angle) * radius(), sin(angle) * radius());
+    }
 }

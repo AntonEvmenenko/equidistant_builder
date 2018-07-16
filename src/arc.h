@@ -28,6 +28,8 @@ public:
 
     bool contains(Point p);
 
+    Point middlePoint();
+
 private:
     Point m_a;
     Point m_b;

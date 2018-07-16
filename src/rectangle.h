@@ -12,6 +12,7 @@
 #include "point.h"
 #include "vector.h"
 #include "segment.h"
+#include "arc.h"
 
 class Rectangle
 {

@@ -79,16 +79,24 @@ void Solver::addCircles()
 {
     for (auto i = m_originalPath.begin(); i != m_originalPath.end(); ++i) {
         if (i->type() == PathPartType::Segment) {
-            m_firstOffsetPath.append(PathPart(Circle(i->segment().a(), m_offset)));
+            Circle c = Circle(i->segment().a(), m_offset);
+            m_firstOffsetPath.append(PathPart(c));
+            m_cutoffCircles.append(c);
         } else if (i->type() == PathPartType::Arc) {
-            m_firstOffsetPath.append(PathPart(Circle(i->arc().a(), m_offset)));
+            Circle c = Circle(i->arc().a(), m_offset);
+            m_firstOffsetPath.append(PathPart(c));
+            m_cutoffCircles.append(c);
         }
     }
 
     if (m_originalPath.last().type() == PathPartType::Segment) {
-        m_firstOffsetPath.append(PathPart(Circle(m_originalPath.last().segment().b(), m_offset)));
+        Circle c = Circle(m_originalPath.last().segment().b(), m_offset);
+        m_firstOffsetPath.append(PathPart(c));
+        m_cutoffCircles.append(c);
     } else if (m_originalPath.last().type() == PathPartType::Arc) {
-        m_firstOffsetPath.append(PathPart(Circle(m_originalPath.last().arc().b(), m_offset)));
+        Circle c = Circle(m_originalPath.last().arc().b(), m_offset);
+        m_firstOffsetPath.append(PathPart(c));
+        m_cutoffCircles.append(c);
     }
 }
 
@@ -118,10 +126,12 @@ void Solver::solve()
             if (i != j) {
                 QVector<Point> temp = getIntersectionPoints(in[i], in[j]);
                 for (auto p = temp.begin(); p != temp.end(); ++p) {
-                    insertPointIfDoesntExist(*p, intersectionPoints);
+                    intersectionPoints.append(*p);
                 }
             }
         }
+
+        removeEqualPoints(intersectionPoints);
 
         if (!intersectionPoints.isEmpty()) {
             out.append(split(in[i], intersectionPoints));
@@ -133,13 +143,29 @@ void Solver::solve()
     m_secondOffsetPath = out;
 
     // cutoff
+
     auto i = m_secondOffsetPath.begin();
 
     while (i != m_secondOffsetPath.end()) {
         bool needToCutoff = false;
         if (i->type() == PathPartType::Segment) {
             for (auto j = m_cutoffRectangles.begin(); j != m_cutoffRectangles.end(); ++j) {
-                if (j->inside(i->segment().center())) {
+                if (segmentInsideRectangle(i->segment(), *j)) {
+                    needToCutoff = true;
+                    break;
+                }
+            }
+            if (!needToCutoff) {
+                for (auto j = m_cutoffCircles.begin(); j != m_cutoffCircles.end(); ++j) {
+                    if (segmentInsideCircle(i->segment(), *j)) {
+                        needToCutoff = true;
+                        break;
+                    }
+                }
+            }
+        } else if (i->type() == PathPartType::Arc) {
+            for (auto j = m_cutoffRectangles.begin(); j != m_cutoffRectangles.end(); ++j) {
+                if (arcInsideRectangle(i->arc(), *j)) {
                     needToCutoff = true;
                     break;
                 }
@@ -159,6 +185,8 @@ void Solver::clear()
 {
     m_firstOffsetPath.clear();
     m_secondOffsetPath.clear();
+    m_cutoffRectangles.clear();
+    m_cutoffCircles.clear();
 }
 
 QVector<Point> Solver::getIntersectionPoints(PathPart a, PathPart b)
@@ -185,22 +213,6 @@ QVector<Point> Solver::getIntersectionPoints(PathPart a, PathPart b)
     return result;
 }
 
-void Solver::insertPointIfDoesntExist(Point p, QVector<Point> &points)
-{
-    bool found = false;
-
-    for (auto i = points.begin(); i != points.end(); ++i) {
-        if (equal(p, *i)) {
-            found = true;
-            break;
-        }
-    }
-
-    if (!found) {
-        points.append(p);
-    }
-}
-
 QVector<PathPart> Solver::split(PathPart pathPart, QVector<Point> points)
 {
     Q_ASSERT(!points.isEmpty());
@@ -209,6 +221,10 @@ QVector<PathPart> Solver::split(PathPart pathPart, QVector<Point> points)
 
     if (pathPart.type() == PathPartType::Segment) {
         result = splitSegment(pathPart.segment(), points);
+    } else if (pathPart.type() == PathPartType::Arc) {
+        result = splitArc(pathPart.arc(), points);
+    } else if (pathPart.type() == PathPartType::Circle) {
+        result = splitCircle(pathPart.circle(), points);
     }
 
     return result;
@@ -220,18 +236,10 @@ QVector<PathPart> Solver::splitSegment(Segment s, QVector<Point> points)
 
     QVector<PathPart> result;
 
-    auto i = points.begin();
-
-    while (i != points.end()) {
-        if (equal(*i, s.a()) || equal(*i, s.b())) {
-            i = points.erase(i);
-        } else {
-            ++i;
-        }
-    }
-
     points.append(s.a());
     points.append(s.b());
+
+    removeEqualPoints(points);
 
     Point a = s.a();
 
@@ -242,6 +250,93 @@ QVector<PathPart> Solver::splitSegment(Segment s, QVector<Point> points)
     for (int i = 0; i < points.size() - 1; ++i) {
         result.append(PathPart(Segment(points[i], points[i + 1])));
     }
+
+    return result;
+}
+
+QVector<PathPart> Solver::splitArc(Arc a, QVector<Point> points)
+{
+    // TODO: check
+
+    Q_ASSERT(!points.isEmpty());
+
+    QVector<PathPart> result;
+
+    points.append(a.a());
+    points.append(a.b());
+
+    removeEqualPoints(points);
+
+    Point center = a.center();
+    double startAngle = atan2(a.a().y() - center.y(), a.a().x() - center.x());
+    double endAngle = atan2(a.b().y() - center.y(), a.b().x() - center.x());
+
+    if (a.arcDirection() == ArcDirection::CCW) {
+        if (endAngle < startAngle) {
+            endAngle += 2 * M_PI;
+        }
+
+        auto compare = [startAngle, center](const Point &p1, const Point &p2){
+            auto calculateAngle = [startAngle, center](const Point &p){
+                double angle = atan2(p.y() - center.y(), p.x() - center.x());
+                if (angle < startAngle) {
+                    angle += 2 * M_PI;
+                }
+                return angle;
+            };
+
+            return calculateAngle(p1) < calculateAngle(p2);
+        };
+
+        std::sort(points.begin(), points.end(), compare);
+
+        for (int i = 0; i < points.size() - 1; ++i) {
+            result.append(PathPart(Arc(points[i], points[i + 1], center, ArcDirection::CCW)));
+        }
+    } else {
+        if (endAngle > startAngle) {
+            endAngle -= 2 * M_PI;
+        }
+
+        auto compare = [startAngle, center](const Point &p1, const Point &p2){
+            auto calculateAngle = [startAngle, center](const Point &p){
+                double angle = atan2(p.y() - center.y(), p.x() - center.x());
+                if (angle > startAngle) {
+                    angle -= 2 * M_PI;
+                }
+                return angle;
+            };
+
+            return calculateAngle(p1) > calculateAngle(p2);
+        };
+
+        std::sort(points.begin(), points.end(), compare);
+
+        for (int i = 0; i < points.size() - 1; ++i) {
+            result.append(PathPart(Arc(points[i], points[i + 1], center, ArcDirection::CW)));
+        }
+    }
+
+    return result;
+}
+
+QVector<PathPart> Solver::splitCircle(Circle c, QVector<Point> points)
+{
+    Q_ASSERT(!points.isEmpty());
+
+    QVector<PathPart> result;
+
+    Point center = c.center();
+
+    std::sort(points.begin(), points.end(), [center](const Point &p1, const Point &p2){
+        return atan2(p1.y() - center.y(), p1.x() - center.x()) < atan2(p2.y() - center.y(), p2.x() - center.x());
+    });
+
+    for (int i = 0; i < points.size() - 1; ++i) {
+        result.append(PathPart(Arc(points[i], points[i + 1], center, ArcDirection::CCW)));
+    }
+
+    result.append(PathPart(Arc(points.last(), points.first(), center, ArcDirection::CCW)));
 
     return result;
 }

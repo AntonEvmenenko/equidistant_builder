@@ -42,6 +42,8 @@ void MainWindow::paintEvent(QPaintEvent *event)
     Q_UNUSED(event);
     QPainter painter(this);
 
+    painter.setRenderHint(QPainter::Antialiasing);
+
     QVector<PathPart>& path = m_solver.getOriginalPath();
 
     for (auto i = path.begin(); i < path.end(); ++i) {
@@ -81,10 +83,10 @@ void MainWindow::paintEvent(QPaintEvent *event)
 //    if (path.length() == 1) {
 //        Arc a = path.first().arc();
 
-//        qDebug() << a.contains(m_tempPoint);
+//        m_tempPoint = a.middlePoint();
 //    }
 
-//    drawPoint(m_tempPoint, 6, Qt::cyan, &painter);
+//    drawPoint(m_tempPoint, 6, Qt::white, &painter);
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event)

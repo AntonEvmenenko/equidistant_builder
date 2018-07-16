@@ -12,7 +12,8 @@ public:
     Point center();
     double radius();
 
-    bool contains(Point p);
+    bool onEdge(Point p);
+    bool inside(Point p);
 
 private:
     Point m_center;

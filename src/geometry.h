@@ -33,6 +33,7 @@ QVector<Point> intersectionArcArc(Arc a1, Arc a2);
 QVector<Point> intersectionArcCircle(Arc a, Circle c);
 
 bool segmentInsideRectangle(Segment s, Rectangle r);
-
+bool arcInsideRectangle(Arc a, Rectangle r);
+bool segmentInsideCircle(Segment s, Circle c);
 
 #endif // GEOMETRY_H
