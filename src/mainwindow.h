@@ -45,6 +45,8 @@ private:
     void drawSegment(Segment segment, int width, QColor color, QPainter *painter);
     void drawCircle(Circle circle, int width, QColor color, QPainter *painter);
 
+    void drawPath(QVector<PathPart> path, int width, QColor color, QPainter *painter);
+
     Point getLastPathPoint();
     Point translatePoint(Point p);
 
