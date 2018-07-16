@@ -267,3 +267,14 @@ bool segmentInsideCircle(Segment s, Circle c)
 
     return false;
 }
+
+bool arcInsideCircle(Arc a, Circle c)
+{
+    if (c.inside(a.a()) || c.inside(a.b())) {
+        return true;
+    }
+
+    // TODO: finish
+
+    return false;
+}

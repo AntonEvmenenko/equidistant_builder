@@ -170,6 +170,14 @@ void Solver::solve()
                     break;
                 }
             }
+            if (!needToCutoff) {
+                for (auto j = m_cutoffCircles.begin(); j != m_cutoffCircles.end(); ++j) {
+                    if (arcInsideCircle(i->arc(), *j)) {
+                        needToCutoff = true;
+                        break;
+                    }
+                }
+            }
         }
         if (needToCutoff) {
             i = m_secondOffsetPath.erase(i);
@@ -209,7 +217,10 @@ QVector<Point> Solver::getIntersectionPoints(PathPart a, PathPart b)
         result = intersectionArcCircle(a.arc(), b.circle());
     } else if (a.type() == PathPartType::Circle && b.type() == PathPartType::Arc) {
         result = intersectionArcCircle(b.arc(), a.circle());
+    } else if (a.type() == PathPartType::Circle && b.type() == PathPartType::Circle) {
+        result = intersectionCircleCircle(a.circle(), b.circle());
     }
+
     return result;
 }
 
