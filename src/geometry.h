@@ -9,6 +9,7 @@
 #include "segment.h"
 #include "arc.h"
 #include "rectangle.h"
+#include "clippedsector.h"
 
 const double eps = 1e-5;
 
@@ -36,5 +37,7 @@ bool segmentInsideRectangle(Segment s, Rectangle r);
 bool arcInsideRectangle(Arc a, Rectangle r);
 bool segmentInsideCircle(Segment s, Circle c);
 bool arcInsideCircle(Arc a, Circle c);
+bool segmentInsideClippedSector(Segment s, ClippedSector cs);
+bool arcInsideClippedSector(Arc a, ClippedSector cs);
 
 #endif // GEOMETRY_H

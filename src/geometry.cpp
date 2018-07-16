@@ -211,70 +211,42 @@ QVector<Point> intersectionArcCircle(Arc a, Circle c)
 
 bool segmentInsideRectangle(Segment s, Rectangle r)
 {
-    QVector<Segment> rectangleEdges = r.edges();
+    // TODO: is it enough?
 
-    for (auto i = rectangleEdges.begin(); i != rectangleEdges.end(); ++i) {
-        if (equal(Line(s), Line(*i))) {
-            return false;
-        }
-    }
-
-    if (r.inside(s.a()) || r.inside(s.b()) || r.inside(s.center())) {
-        return true;
-    }
-
-    QVector<Point> intersectionPoints;
-    for (auto i = rectangleEdges.begin(); i != rectangleEdges.end(); ++i) {
-        intersectionPoints.append(intersectionSegmentSegment(s, *i));
-    }
-
-    removeEqualPoints(intersectionPoints);
-
-    Q_ASSERT(intersectionPoints.size() < 3);
-
-    return intersectionPoints.size() == 2;
+    return r.inside(s.a()) || r.inside(s.b()) || r.inside(s.center());
 }
 
 bool arcInsideRectangle(Arc a, Rectangle r)
 {
-    // TODO: check
+    // TODO: is it enough?
 
-    if (r.inside(a.a()) || r.inside(a.b())) {
-        return true;
-    }
-
-    QVector<Segment> rectangleEdges = r.edges();
-
-    QVector<Point> intersectionPoints;
-    for (auto i = rectangleEdges.begin(); i != rectangleEdges.end(); ++i) {
-        intersectionPoints.append(intersectionSegmentArc(*i, a));
-    }
-
-    removeEqualPoints(intersectionPoints);
-
-    Q_ASSERT(intersectionPoints.size() < 3);
-
-    return (intersectionPoints.size() == 2) && r.inside(a.middlePoint());
+    return r.inside(a.a()) || r.inside(a.b()) || r.inside(a.middlePoint());
 }
 
 bool segmentInsideCircle(Segment s, Circle c)
 {
-    if (c.inside(s.a()) || c.inside(s.b())) {
-        return true;
-    }
+    // TODO: is it enough?
 
-    // TODO: finish
-
-    return false;
+    return c.inside(s.a()) || c.inside(s.b()) || c.inside(s.center());
 }
 
 bool arcInsideCircle(Arc a, Circle c)
 {
-    if (c.inside(a.a()) || c.inside(a.b())) {
-        return true;
-    }
+    // TODO: is it enough?
 
-    // TODO: finish
+    return c.inside(a.a()) || c.inside(a.b()) || c.inside(a.middlePoint());
+}
 
-    return false;
+bool segmentInsideClippedSector(Segment s, ClippedSector cs)
+{
+    // TODO: is it enough?
+
+    return cs.inside(s.a()) || cs.inside(s.b()) || cs.inside(s.center());
+}
+
+bool arcInsideClippedSector(Arc a, ClippedSector cs)
+{
+    // TODO: is it enough?
+
+    return cs.inside(a.a()) || cs.inside(a.b()) || cs.inside(a.middlePoint());
 }

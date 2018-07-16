@@ -45,14 +45,25 @@ QVector<PathPart> Solver::offsetPathPart(PathPart pathPart)
 
         m_firstOffsetPath.append(PathPart(Segment(pathPart.segment().a() + n * m_offset, pathPart.segment().b() + n * m_offset)));
         m_firstOffsetPath.append(PathPart(Segment(pathPart.segment().a() + n * -m_offset, pathPart.segment().b() + n * -m_offset)));
+
+        Point a = pathPart.segment().a();
+        Point b = pathPart.segment().b();
+
+        Vector ab_2 = Vector(a, b) * 0.5;
+        m_cutoffRectangles.append(Rectangle(a + ab_2, ab_2, ab_2.rotate90CCW().normalize() * m_offset));
     } else if (pathPart.type() == PathPartType::Arc) {
         Vector n1 = Vector(pathPart.arc().a(), pathPart.arc().center()).normalize();
         Vector n2 = Vector(pathPart.arc().b(), pathPart.arc().center()).normalize();
 
-        if (m_offset <= pathPart.arc().radius()) {
-            m_firstOffsetPath.append(PathPart(Arc(pathPart.arc().a() + n1 * m_offset, pathPart.arc().b() + n2 * m_offset, pathPart.arc().center())));
+        Arc out = Arc(pathPart.arc().a() + n1 * -m_offset, pathPart.arc().b() + n2 * -m_offset, pathPart.arc().center(), pathPart.arc().arcDirection());
+        m_firstOffsetPath.append(PathPart(out));
+
+        if (m_offset < pathPart.arc().radius() && !equal(m_offset, pathPart.arc().radius())) {
+            Arc in = Arc(pathPart.arc().a() + n1 * m_offset, pathPart.arc().b() + n2 * m_offset, pathPart.arc().center(), pathPart.arc().arcDirection());
+            m_firstOffsetPath.append(PathPart(in));
+
+            m_cutoffClippedSectors.append(ClippedSector(in, out));
         }
-        m_firstOffsetPath.append(PathPart(Arc(pathPart.arc().a() + n1 * -m_offset, pathPart.arc().b() + n2 * -m_offset, pathPart.arc().center())));
     }
 
     return result;
@@ -63,15 +74,6 @@ void Solver::makeOffset()
     for (auto i = m_originalPath.begin(); i != m_originalPath.end(); ++i) {
         QVector<PathPart> offset = offsetPathPart(*i);
         m_firstOffsetPath.append(offset);
-
-        if (i->type() == PathPartType::Segment) {
-            Point a = i->segment().a();
-            Point b = i->segment().b();
-
-            Vector ab_2 = Vector(a, b) * 0.5;
-
-            m_cutoffRectangles.append(Rectangle(a + ab_2, ab_2, ab_2.rotate90CCW().normalize() * m_offset));
-        }
     }
 }
 
@@ -163,6 +165,14 @@ void Solver::solve()
                     }
                 }
             }
+            if (!needToCutoff) {
+                for (auto j = m_cutoffClippedSectors.begin(); j != m_cutoffClippedSectors.end(); ++j) {
+                    if (segmentInsideClippedSector(i->segment(), *j)) {
+                        needToCutoff = true;
+                        break;
+                    }
+                }
+            }
         } else if (i->type() == PathPartType::Arc) {
             for (auto j = m_cutoffRectangles.begin(); j != m_cutoffRectangles.end(); ++j) {
                 if (arcInsideRectangle(i->arc(), *j)) {
@@ -173,6 +183,14 @@ void Solver::solve()
             if (!needToCutoff) {
                 for (auto j = m_cutoffCircles.begin(); j != m_cutoffCircles.end(); ++j) {
                     if (arcInsideCircle(i->arc(), *j)) {
+                        needToCutoff = true;
+                        break;
+                    }
+                }
+            }
+            if (!needToCutoff) {
+                for (auto j = m_cutoffClippedSectors.begin(); j != m_cutoffClippedSectors.end(); ++j) {
+                    if (arcInsideClippedSector(i->arc(), *j)) {
                         needToCutoff = true;
                         break;
                     }
@@ -195,6 +213,7 @@ void Solver::clear()
     m_secondOffsetPath.clear();
     m_cutoffRectangles.clear();
     m_cutoffCircles.clear();
+    m_cutoffClippedSectors.clear();
 }
 
 QVector<Point> Solver::getIntersectionPoints(PathPart a, PathPart b)

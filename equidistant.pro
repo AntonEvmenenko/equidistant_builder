@@ -35,7 +35,8 @@ SOURCES += \
     src/line.cpp \
     src/circle.cpp \
     src/geometry.cpp \
-    src/rectangle.cpp
+    src/rectangle.cpp \
+    src/clippedsector.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -48,7 +49,8 @@ HEADERS += \
     src/line.h \
     src/circle.h \
     src/geometry.h \
-    src/rectangle.h
+    src/rectangle.h \
+    src/clippedsector.h
 
 FORMS += \
     src/mainwindow.ui

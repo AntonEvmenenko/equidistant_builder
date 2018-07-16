@@ -186,8 +186,8 @@ void MainWindow::drawArc(Arc arc, int width, QColor color, QPainter* painter)
 
     painter->drawArc(rectangle, startAngle, spanAngle);
 
-    drawPoint(arc.a(), POINT_WIDTH, /*POINT_COLOR*/Qt::red, painter);
-    drawPoint(arc.b(), POINT_WIDTH, /*POINT_COLOR*/Qt::green, painter);
+    drawPoint(arc.a(), POINT_WIDTH, POINT_COLOR, painter);
+    drawPoint(arc.b(), POINT_WIDTH, POINT_COLOR, painter);
     drawPoint(arc.center(), ARC_CENTER_WIDTH, ARC_CENTER_COLOR, painter);
 }
 

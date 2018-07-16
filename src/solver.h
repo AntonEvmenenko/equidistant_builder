@@ -6,6 +6,7 @@
 #include "vector.h"
 #include "geometry.h"
 #include "rectangle.h"
+#include "clippedsector.h"
 
 class Solver
 {
@@ -41,6 +42,7 @@ private:
 
     QVector<Rectangle> m_cutoffRectangles;
     QVector<Circle> m_cutoffCircles;
+    QVector<ClippedSector> m_cutoffClippedSectors;
 
     int m_offset = 30;
 };
