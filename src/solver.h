@@ -47,6 +47,7 @@ private:
     QVector<Rectangle> m_cutoffRectangles;
     QVector<Circle> m_cutoffCircles;
     QVector<ClippedSector> m_cutoffClippedSectors;
+    QVector<Sector> m_cutoffSectors;
 
     int m_offset = 30;
 };

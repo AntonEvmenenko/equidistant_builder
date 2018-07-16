@@ -250,3 +250,13 @@ bool arcInsideClippedSector(Arc a, ClippedSector cs)
 
     return cs.inside(a.a()) || cs.inside(a.b()) || cs.inside(a.middlePoint());
 }
+
+bool segmentInsideSector(Segment s, Sector sector)
+{
+    return sector.inside(s.a()) || sector.inside(s.b()) || sector.inside(s.center());
+}
+
+bool arcInsideSector(Arc a, Sector s)
+{
+    return s.inside(a.a()) || s.inside(a.b()) || s.inside(a.middlePoint());
+}
