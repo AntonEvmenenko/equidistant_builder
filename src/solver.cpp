@@ -26,14 +26,19 @@ QVector<PathPart>& Solver::getOriginalPath()
     return m_originalPath;
 }
 
-QVector<PathPart> Solver::getFirstOffsetPath()
+QVector<PathPart> Solver::getOffsettedPath()
 {
-    return m_firstOffsetPath;
+    return m_offsetedPath;
 }
 
-QVector<PathPart> Solver::getSecondOffsetPath()
+QVector<PathPart> Solver::getSplittedPath()
 {
-    return m_secondOffsetPath;
+    return m_splittedPath;
+}
+
+QVector<PathPart> Solver::getCutoffedPath()
+{
+    return m_cutoffedPath;
 }
 
 QVector<PathPart> Solver::offsetPathPart(PathPart pathPart)
@@ -43,8 +48,8 @@ QVector<PathPart> Solver::offsetPathPart(PathPart pathPart)
     if (pathPart.type() == PathPartType::Segment) {
         Vector n = Vector(pathPart.segment().a(), pathPart.segment().b()).rotate90CW().normalize();
 
-        m_firstOffsetPath.append(PathPart(Segment(pathPart.segment().a() + n * m_offset, pathPart.segment().b() + n * m_offset)));
-        m_firstOffsetPath.append(PathPart(Segment(pathPart.segment().a() + n * -m_offset, pathPart.segment().b() + n * -m_offset)));
+        m_offsetedPath.append(PathPart(Segment(pathPart.segment().a() + n * m_offset, pathPart.segment().b() + n * m_offset)));
+        m_offsetedPath.append(PathPart(Segment(pathPart.segment().a() + n * -m_offset, pathPart.segment().b() + n * -m_offset)));
 
         Point a = pathPart.segment().a();
         Point b = pathPart.segment().b();
@@ -56,11 +61,11 @@ QVector<PathPart> Solver::offsetPathPart(PathPart pathPart)
         Vector n2 = Vector(pathPart.arc().b(), pathPart.arc().center()).normalize();
 
         Arc out = Arc(pathPart.arc().a() + n1 * -m_offset, pathPart.arc().b() + n2 * -m_offset, pathPart.arc().center(), pathPart.arc().arcDirection());
-        m_firstOffsetPath.append(PathPart(out));
+        m_offsetedPath.append(PathPart(out));
 
         if (m_offset < pathPart.arc().radius() && !equal(m_offset, pathPart.arc().radius())) {
             Arc in = Arc(pathPart.arc().a() + n1 * m_offset, pathPart.arc().b() + n2 * m_offset, pathPart.arc().center(), pathPart.arc().arcDirection());
-            m_firstOffsetPath.append(PathPart(in));
+            m_offsetedPath.append(PathPart(in));
 
             m_cutoffClippedSectors.append(ClippedSector(in, out));
         }
@@ -73,7 +78,7 @@ void Solver::makeOffset()
 {
     for (auto i = m_originalPath.begin(); i != m_originalPath.end(); ++i) {
         QVector<PathPart> offset = offsetPathPart(*i);
-        m_firstOffsetPath.append(offset);
+        m_offsetedPath.append(offset);
     }
 }
 
@@ -82,51 +87,33 @@ void Solver::addCircles()
     for (auto i = m_originalPath.begin(); i != m_originalPath.end(); ++i) {
         if (i->type() == PathPartType::Segment) {
             Circle c = Circle(i->segment().a(), m_offset);
-            m_firstOffsetPath.append(PathPart(c));
+            m_offsetedPath.append(PathPart(c));
             m_cutoffCircles.append(c);
         } else if (i->type() == PathPartType::Arc) {
             Circle c = Circle(i->arc().a(), m_offset);
-            m_firstOffsetPath.append(PathPart(c));
+            m_offsetedPath.append(PathPart(c));
             m_cutoffCircles.append(c);
         }
     }
 
     if (m_originalPath.last().type() == PathPartType::Segment) {
         Circle c = Circle(m_originalPath.last().segment().b(), m_offset);
-        m_firstOffsetPath.append(PathPart(c));
+        m_offsetedPath.append(PathPart(c));
         m_cutoffCircles.append(c);
     } else if (m_originalPath.last().type() == PathPartType::Arc) {
         Circle c = Circle(m_originalPath.last().arc().b(), m_offset);
-        m_firstOffsetPath.append(PathPart(c));
+        m_offsetedPath.append(PathPart(c));
         m_cutoffCircles.append(c);
     }
 }
 
-int Solver::getOffset()
+void Solver::split()
 {
-    return m_offset;
-}
-
-void Solver::setOffset(int offset)
-{
-    m_offset = offset;
-}
-
-void Solver::solve()
-{
-    makeOffset();
-    addCircles();
-
-    QVector<PathPart> in, out;
-    in = m_firstOffsetPath;
-
-    // split
-
-    for (int i = 0; i < in.size(); ++i) {
+    for (int i = 0; i < m_offsetedPath.size(); ++i) {
         QVector<Point> intersectionPoints;
-        for (int j = 0; j < in.size(); ++j) {
+        for (int j = 0; j < m_offsetedPath.size(); ++j) {
             if (i != j) {
-                QVector<Point> temp = getIntersectionPoints(in[i], in[j]);
+                QVector<Point> temp = getIntersectionPoints(m_offsetedPath[i], m_offsetedPath[j]);
                 for (auto p = temp.begin(); p != temp.end(); ++p) {
                     intersectionPoints.append(*p);
                 }
@@ -136,19 +123,20 @@ void Solver::solve()
         removeEqualPoints(intersectionPoints);
 
         if (!intersectionPoints.isEmpty()) {
-            out.append(split(in[i], intersectionPoints));
+            m_splittedPath.append(split(m_offsetedPath[i], intersectionPoints));
         } else {
-            out.append(in[i]);
+            m_splittedPath.append(m_offsetedPath[i]);
         }
     }
+}
 
-    m_secondOffsetPath = out;
+void Solver::cutoff()
+{
+    m_cutoffedPath = m_splittedPath;
 
-    // cutoff
+    auto i = m_cutoffedPath.begin();
 
-    auto i = m_secondOffsetPath.begin();
-
-    while (i != m_secondOffsetPath.end()) {
+    while (i != m_cutoffedPath.end()) {
         bool needToCutoff = false;
         if (i->type() == PathPartType::Segment) {
             for (auto j = m_cutoffRectangles.begin(); j != m_cutoffRectangles.end(); ++j) {
@@ -198,19 +186,36 @@ void Solver::solve()
             }
         }
         if (needToCutoff) {
-            i = m_secondOffsetPath.erase(i);
+            i = m_cutoffedPath.erase(i);
         } else {
             ++i;
         }
     }
+}
 
-    qDebug() << "end = " << m_secondOffsetPath.size();
+int Solver::getOffset()
+{
+    return m_offset;
+}
+
+void Solver::setOffset(int offset)
+{
+    m_offset = offset;
+}
+
+void Solver::solve()
+{
+    makeOffset();
+    addCircles();
+    split();
+    cutoff();
 }
 
 void Solver::clear()
 {
-    m_firstOffsetPath.clear();
-    m_secondOffsetPath.clear();
+    m_offsetedPath.clear();
+    m_splittedPath.clear();
+    m_cutoffedPath.clear();
     m_cutoffRectangles.clear();
     m_cutoffCircles.clear();
     m_cutoffClippedSectors.clear();

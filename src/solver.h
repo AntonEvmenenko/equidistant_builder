@@ -15,12 +15,15 @@ public:
     void addPathPart(Segment segment);
     void addPathPart(Arc arc);
     QVector<PathPart>& getOriginalPath();
-    QVector<PathPart> getFirstOffsetPath();
-    QVector<PathPart> getSecondOffsetPath();
+    QVector<PathPart> getOffsettedPath();
+    QVector<PathPart> getSplittedPath();
+    QVector<PathPart> getCutoffedPath();
 
     QVector<PathPart> offsetPathPart(PathPart pathPart);
     void makeOffset();
     void addCircles();
+    void split();
+    void cutoff();
 
     int getOffset();
     void setOffset(int offset);
@@ -37,8 +40,9 @@ private:
     QVector<PathPart> splitCircle(Circle c, QVector<Point> points);
 
     QVector<PathPart> m_originalPath;
-    QVector<PathPart> m_firstOffsetPath;
-    QVector<PathPart> m_secondOffsetPath;
+    QVector<PathPart> m_offsetedPath;
+    QVector<PathPart> m_splittedPath;
+    QVector<PathPart> m_cutoffedPath;
 
     QVector<Rectangle> m_cutoffRectangles;
     QVector<Circle> m_cutoffCircles;

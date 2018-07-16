@@ -47,7 +47,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
     }
 
     drawPath(path, ORIGINAL_PATHPART_WIDTH, ORIGINAL_PATHPART_COLOR,  &painter);
-    drawPath(m_solver.getSecondOffsetPath(), OFFSETED_PATHPART_WIDTH, OFFSETED_PATHPART_COLOR,  &painter);
+    drawPath(m_solver.getCutoffedPath(), OFFSETED_PATHPART_WIDTH, OFFSETED_PATHPART_COLOR,  &painter);
 
 //    drawPoint(m_tempPoint, 6, Qt::white, &painter);
 }
