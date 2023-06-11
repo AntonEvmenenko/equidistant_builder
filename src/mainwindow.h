@@ -25,18 +25,10 @@ protected:
 
 private slots:
     void on_addSegmentButton_clicked();
-
     void on_addArcButton_clicked();
+    void on_offsetSlider_valueChanged(int value);
 
-    void on_createButton_clicked();
-
-    void on_clearButton_clicked();
-
-    void on_offsetLineEdit_textChanged(const QString &text);
-
-    void on_offsetLineEdit_returnPressed();
-
-    void on_testButton_clicked();
+    void on_showEquidistantCheckBox_stateChanged(int arg1);
 
 private:
     Ui::MainWindow *ui;
@@ -47,6 +39,10 @@ private:
 
     void drawPath(QVector<PathPart> path, int width, QColor color, QPainter *painter);
 
+    void updateOffset(int offset);
+
+    void repaint();
+
     Point getLastPathPoint();
     Point translatePoint(Point p);
 
@@ -55,6 +51,8 @@ private:
 
     Point m_tempPoint;
     double m_angle = 0.0;
+
+    bool m_showEquidistant = false;
 };
 
 #endif // MAINWINDOW_H

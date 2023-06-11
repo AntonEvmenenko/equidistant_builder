@@ -223,6 +223,10 @@ void Solver::setOffset(int offset)
 
 void Solver::solve()
 {
+    if (m_originalPath.empty()) {
+        return;
+    }
+
     makeOffset();
     addCircles();
     split();

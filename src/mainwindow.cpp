@@ -17,13 +17,20 @@
 #define ARC_CENTER_WIDTH 5
 #define ARC_CENTER_COLOR Qt::green
 
+#define DEFAULT_OFFSET 30
+#define MIN_OFFSET 5
+#define MAX_OFFSET 100
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    ui->offsetLineEdit->setText(QString::number(m_solver.getOffset()));
+    ui->offsetSlider->setMinimum(MIN_OFFSET);
+    ui->offsetSlider->setMaximum(MAX_OFFSET);
+
+    updateOffset(DEFAULT_OFFSET);
 }
 
 MainWindow::~MainWindow()
@@ -54,7 +61,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
-    Point p = translatePoint(Point(event->x(), event->y()));
+    Point p = translatePoint(Point(event->position().x(), event->position().y()));
 
     const double eps = 5;
 
@@ -99,7 +106,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 
 void MainWindow::mouseMoveEvent(QMouseEvent *event)
 {
-    Point p = translatePoint(Point(event->x(), event->y()));
+    Point p = translatePoint(Point(event->position().x(), event->position().y()));
 
     if (!m_dragPoints.isEmpty()) {
         for (auto i = m_dragPoints.begin(); i != m_dragPoints.end(); ++i) {
@@ -144,7 +151,7 @@ void MainWindow::drawArc(Arc arc, int width, QColor color, QPainter* painter)
     if (arc.arcDirection() == ArcDirection::CCW && spanAngle < 0) spanAngle += 360.;
 
     startAngle *= 16.;
-    endAngle *= 16.;
+    // endAngle *= 16.;
     spanAngle *= 16.;
 
     painter->drawArc(rectangle, startAngle, spanAngle);
@@ -200,6 +207,24 @@ void MainWindow::drawPath(QVector<PathPart> path, int width, QColor color, QPain
     }
 }
 
+void MainWindow::updateOffset(int offset)
+{
+    m_solver.setOffset(offset);
+    ui->offsetLabel->setText("Offset: " + QString::number(offset));
+    ui->offsetSlider->setValue(offset);
+}
+
+void MainWindow::repaint()
+{
+    m_solver.clear();
+
+    if (m_showEquidistant) {
+        m_solver.solve();
+    }
+
+    QMainWindow::repaint();
+}
+
 Point MainWindow::getLastPathPoint()
 {
     if (m_solver.getOriginalPath().isEmpty()) {
@@ -241,35 +266,16 @@ void MainWindow::on_addArcButton_clicked()
     repaint();
 }
 
-void MainWindow::on_createButton_clicked()
+void MainWindow::on_offsetSlider_valueChanged(int value)
 {
-    m_solver.solve();
+    updateOffset(value);
     repaint();
 }
 
-void MainWindow::on_clearButton_clicked()
+
+void MainWindow::on_showEquidistantCheckBox_stateChanged(int arg1)
 {
-    m_solver.clear();
+    m_showEquidistant = (arg1 == Qt::Checked);
     repaint();
 }
 
-void MainWindow::on_offsetLineEdit_textChanged(const QString &text)
-{
-    bool ok;
-    int offset = text.toInt(&ok);
-    if (ok) {
-        m_solver.setOffset(offset);
-    } else {
-        qWarning() << "Failed to parse offset";
-    }
-}
-
-void MainWindow::on_offsetLineEdit_returnPressed()
-{
-    ui->offsetLineEdit->clearFocus();
-}
-
-void MainWindow::on_testButton_clicked()
-{
-
-}
