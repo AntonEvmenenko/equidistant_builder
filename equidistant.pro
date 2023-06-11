@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = equidistant
+TARGET = equidistant_builder
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -54,6 +54,10 @@ HEADERS += \
     src/pathpart.h \
     src/solver.h \
     src/geometry.h
+
+INCLUDEPATH += \
+    src \
+    src/geometric_primitives
 
 FORMS += \
     src/mainwindow.ui

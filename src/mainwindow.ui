@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>equidistant</string>
+   <string>Equidistant Builder</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -32,7 +32,7 @@
     <item row="8" column="1">
      <widget class="QCheckBox" name="showEquidistantCheckBox">
       <property name="text">
-       <string>Show Equidistant</string>
+       <string>Show equidistant</string>
       </property>
      </widget>
     </item>
