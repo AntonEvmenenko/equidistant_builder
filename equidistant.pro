@@ -24,35 +24,36 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
+    src/geometric_primitives/arc.cpp \
+    src/geometric_primitives/circle.cpp \
+    src/geometric_primitives/clippedsector.cpp \
+    src/geometric_primitives/line.cpp \
+    src/geometric_primitives/point.cpp \
+    src/geometric_primitives/rectangle.cpp \
+    src/geometric_primitives/sector.cpp \
+    src/geometric_primitives/segment.cpp \
+    src/geometric_primitives/vector.cpp \
     src/main.cpp \
     src/mainwindow.cpp \
-    src/point.cpp \
-    src/vector.cpp \
-    src/arc.cpp \
     src/pathpart.cpp \
-    src/segment.cpp \
     src/solver.cpp \
-    src/line.cpp \
-    src/circle.cpp \
-    src/geometry.cpp \
-    src/rectangle.cpp \
-    src/clippedsector.cpp \
-    src/sector.cpp
+    src/geometry.cpp
 
 HEADERS += \
+    src/geometric_primitives/arc.h \
+    src/geometric_primitives/circle.h \
+    src/geometric_primitives/clippedsector.h \
+    src/geometric_primitives/line.h \
+    src/geometric_primitives/point.h \
+    src/geometric_primitives/rectangle.h \
+    src/geometric_primitives/sector.h \
+    src/geometric_primitives/segment.h \
+    src/geometric_primitives/vector.h \
+    src/main.h \
     src/mainwindow.h \
-    src/point.h \
-    src/vector.h \
-    src/arc.h \
     src/pathpart.h \
-    src/segment.h \
     src/solver.h \
-    src/line.h \
-    src/circle.h \
-    src/geometry.h \
-    src/rectangle.h \
-    src/clippedsector.h \
-    src/sector.h
+    src/geometry.h
 
 FORMS += \
     src/mainwindow.ui
